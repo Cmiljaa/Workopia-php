@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redirect any URL starting with /workopia to the URL without /workopia
+RewriteRule ^workopia/(.*)$ /$1 [L,R=301]
+
+# Existing rule to handle requests
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php [NC,L,QSA]
