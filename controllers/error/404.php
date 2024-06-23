@@ -1,4 +1,3 @@
 <?php
 
-
-echo "ERROR!";
+loadView('error/404');
