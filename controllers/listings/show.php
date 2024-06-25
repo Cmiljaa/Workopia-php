@@ -12,7 +12,7 @@ $params = [
 
 $listing = $db -> query('SELECT * FROM listings WHERE id = :id', $params);
 
-loadView('listings/show');
+loadView('listings/show', ['listing' => $listing[0]]);
 
 
 
