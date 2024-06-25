@@ -35,11 +35,17 @@ class Database{
      * @throws PDOException
      */
 
-     public function query($query){
+     public function query($query, $params = []){
         try{
             $stmt = $this->conn->prepare($query);
+
+            foreach($params as $param => $value){
+                $stmt -> bindParam(':' . $param, $value);
+            }
+
             $stmt -> execute();
             return $stmt -> fetchAll();
+
         }catch(PDOException $e){
             echo "Query failed to execute: " . $e -> getMessage();
         }
