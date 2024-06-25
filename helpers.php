@@ -77,3 +77,13 @@ function inspect($value){
     
 }
 
+/**
+ * Format salary
+ * 
+ * @param string salary
+ * @return string Formatted salary
+ */
+
+function formatSalary($salary){
+    return '$' . number_format(floatval($salary));
+}
