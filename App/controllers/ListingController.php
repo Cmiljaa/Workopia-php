@@ -32,14 +32,21 @@ class ListingController{
     * @return void
     */
 
-    public function show(){
-        $id = $_GET['id'] ?? '';
+    public function show($params){
+        $id = $params['id'] ?? '';
 
         $params = [
             'id' => $id
         ];
 
         $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
+
+        //Check if listing exists
+
+        if(!$listing){
+            ErrorController::notFound('Listing not found');
+            return;
+        }
 
         loadView('listings/show', ['listing' => $listing[0]]);
     }
