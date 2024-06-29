@@ -3,6 +3,7 @@
 namespace Framework;
 
 use PDO;
+use PDOException;
 
 class Database{
     public $conn;
@@ -44,7 +45,7 @@ class Database{
             $stmt = $this->conn->prepare($query);
 
             foreach($params as $param => $value){
-                $stmt -> bindParam(':' . $param, $value);
+                $stmt -> bindValue(':' . $param, $value);
             }
 
             $stmt -> execute();

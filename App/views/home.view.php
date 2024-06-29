@@ -24,7 +24,7 @@
                     <span class="text-xs bg-blue-500 text-white rounded-full px-2 py-1 ml-2">Remote</span> 
                   </li>
                   <li class="mb-2">  
-                    <strong>Tags:</strong> <span><?=$listing['tags']; ?></span>
+                    <?php if(!empty($listing['tags'])): ?> <strong>Tags:</strong> <span><?=$listing['tags']; ?></span> <?php endif; ?>
                   </li>
                 </ul>
                 <a href="/listing/<?=$listing['id']; ?>"
