@@ -34,7 +34,7 @@
           <?php endforeach; ?>
       </div>
     </div>
-  </div> 
+  </div>
 </section>
 
 <?= loadPartial('bottom-banner'); ?>
