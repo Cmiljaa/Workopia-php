@@ -4,6 +4,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 require '../helpers.php';
 
+session_start();
+
 use Framework\Router;
 
 // Instantiate the router
