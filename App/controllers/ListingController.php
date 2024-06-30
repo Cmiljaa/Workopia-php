@@ -127,4 +127,27 @@ class ListingController{
             redirect('/listings');
         }
      }
+
+    /**
+    * Delete a single listing
+    * 
+    * @param array $params
+    * @return void
+    */
+
+    public function delete($params){
+        $id = $params['id'] ?? '';
+
+        $params = [
+            'id' => $id
+        ];
+
+        $result = $this -> db -> query('DELETE FROM listings WHERE id = :id', $params);
+
+        //Set flash message
+
+        $_SESSION['success_message'] = 'Listing deleted successfully!';
+
+        redirect('/listings');
+    }
 }
