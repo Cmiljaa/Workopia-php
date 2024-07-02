@@ -129,7 +129,7 @@ class UserController{
             'state' => $state
         ]);
 
-        $_SESSION['success_message'] = 'Successfully!';
+        Session::set('success_message', 'Registration successfully!');
 
         redirect('/');
     }
@@ -149,5 +149,73 @@ class UserController{
         setcookie('PHPSESSID', '', time() - 86400, $params['path'], $params['domain']);
 
         redirect('/');
+    }
+
+    /**
+    * Authenticate a user with email and password
+    * 
+    * @return void
+    */
+
+    public function authenticate(){
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+
+        $errors = [];
+
+        if(!Validation::email($email)){
+            $errors['email'] = 'Incorrect email';
+        }
+
+        if(!Validation::string($password, 6, 50)){
+            $errors['password'] = 'Password must be at least 6 characters';
+        }
+
+        if(!empty($errors)){
+            loadView('users/login', [
+                'errors' => $errors,
+                'email' => $email,
+                'password' => $password
+                ]);
+            exit();
+        }
+
+        $user = $this -> db -> query("SELECT * FROM users WHERE email=:email", $params=['email' => $email]);
+
+        if(empty($user)){
+            $errors['email'] = 'Incorrect credentials';
+            loadView('users/login', [
+                'errors' => $errors,
+                'email' => $email,
+                'password' => $password
+                ]);
+            exit();
+        }
+
+        $user = $user[0];
+
+        //Check if password is correct
+        if(!password_verify($password, $user['password'])){
+            $errors['password'] = 'Incorrect credentials';
+            loadView('users/login', [
+                'errors' => $errors,
+                'email' => $email,
+                'password' => $password
+                ]);
+            exit();
+        }
+
+        //Set a user session
+        Session::set('user', [
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'city' => $user['city'],
+            'state' => $user['state']
+        ]);
+
+        Session::setFlashMessage('success_message', 'Successfully logged in!');
+        redirect('/');
+
     }
 }
