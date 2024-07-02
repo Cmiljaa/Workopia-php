@@ -151,6 +151,8 @@ class ListingController{
 
             $this -> db -> query("INSERT INTO listings({$fields}) VALUES ({$values})", $newListingData);
 
+            Session::setFlashMessage('success_message', 'Successfully added listing!');
+
             redirect('/listings');
         }
      }

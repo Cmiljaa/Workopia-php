@@ -129,7 +129,7 @@ class UserController{
             'state' => $state
         ]);
 
-        Session::set('success_message', 'Registration successfully!');
+        Session::setFlashMessage('success_message', 'Registration successfully!');
 
         redirect('/');
     }

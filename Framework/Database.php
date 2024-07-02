@@ -52,7 +52,7 @@ class Database{
             return $stmt -> fetchAll();
 
         }catch(PDOException $e){
-            echo "Query failed to execute: " . $e -> getMessage();
+            throw new PDOException("Query failed to execute: {$e->getMessage()}");
         }
      }
 }
