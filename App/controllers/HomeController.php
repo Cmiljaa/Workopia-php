@@ -15,7 +15,7 @@ class HomeController{
     }
 
     public function index(){
-        $listings = $this -> db -> query("SELECT * FROM listings"); 
+        $listings = $this -> db -> query("SELECT * FROM listings ORDER BY created_at DESC"); 
 
         loadView('home', ['listings' => $listings]);
     }

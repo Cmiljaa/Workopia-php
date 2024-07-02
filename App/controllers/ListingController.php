@@ -2,8 +2,9 @@
 
 namespace App\Controllers;
 
+use Framework\Autorization;
 use Framework\Database;
-
+use Framework\Session;
 use Framework\Validation;
 
 class ListingController{
@@ -22,7 +23,7 @@ class ListingController{
     */
 
     public function index(){
-        $listings = $this -> db -> query("SELECT * FROM listings");
+        $listings = $this -> db -> query("SELECT * FROM listings ORDER BY created_at DESC");
 
         loadView('listings/index', ['listings' => $listings]);
     }
@@ -43,6 +44,8 @@ class ListingController{
 
         $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
 
+        $listing = $listing[0];
+
         //Check if listing exists
 
         if(!$listing){
@@ -50,7 +53,7 @@ class ListingController{
             return;
         }
 
-        loadView('listings/show', ['listing' => $listing[0]]);
+        loadView('listings/show', ['listing' => $listing]);
     }
 
     /**
@@ -78,6 +81,8 @@ class ListingController{
 
         $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
 
+        $listing = $listing[0];
+
         //Check if listing exists
 
         if(!$listing){
@@ -85,7 +90,14 @@ class ListingController{
             return;
         }
 
-        loadView('listings/edit', ['listing' => $listing[0]]);
+        //Authorization
+
+        if(!Autorization::isOwner($listing['user_id'])){
+            Session::setFlashMessage('error_message', 'You are not authorized to edit this listing');
+            return redirect('/');
+        }
+
+        loadView('listings/edit', ['listing' => $listing]);
     }
 
     /**
@@ -99,7 +111,7 @@ class ListingController{
         $allowedFields = ['title', 'description', 'salary', 'tags', 'company', 'address', 'city', 'state', 'phone', 'email', 'requirements', 'benefits'];
         $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
 
-        $newListingData['user_id'] = 1;
+        $newListingData['user_id'] = Session::get('user')['id'];
 
         $newListingData = array_map('sanitize', $newListingData);
 
@@ -157,11 +169,22 @@ class ListingController{
             'id' => $id
         ];
 
+        $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
+
+        $listing = $listing[0];
+
+        //Authorization
+
+        if(!Autorization::isOwner($listing['user_id'])){
+            Session::setFlashMessage('error_message', 'You are not authorized to delete this listing');
+            return redirect('/');
+        }
+
         $result = $this -> db -> query('DELETE FROM listings WHERE id = :id', $params);
 
         //Set flash message
 
-        $_SESSION['success_message'] = 'Listing deleted successfully!';
+        Session::setFlashMessage('success_message', 'Listing deleted successfully!');
 
         redirect('/listings');
     }
@@ -230,7 +253,7 @@ class ListingController{
         $this->db->query($updateQuery, $updateValues);
 
         // Set flash message
-        $_SESSION['success_message'] = 'Listing updated';
+        Session::setFlashMessage('success_message', 'Listing updated');
 
         redirect('/listings/' . $id);
         }
