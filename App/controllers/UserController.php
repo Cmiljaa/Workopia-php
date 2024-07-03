@@ -2,17 +2,17 @@
 
 namespace App\Controllers;
 
+use App\Models\UserModel;
 use Framework\Database;
 use Framework\Validation;
 use Framework\Session;
 
 class UserController{
-    protected $db;
+    protected $userModel;
 
     public function __construct()
     {
-        $config = require basePath('config/db.php');
-        $this -> db = new Database($config);
+        $this -> userModel = new UserModel();
     }
 
     /**
@@ -89,11 +89,7 @@ class UserController{
         exit;
         }
 
-        $params = [
-            'email' => $email
-        ];
-
-        $user = $this -> db -> query("SELECT * FROM users WHERE email = :email", $params);
+        $user = $this -> userModel -> getUserByEmail($email);
 
         if($user){
             $errors['email'] = 'Email already exists';
@@ -115,11 +111,9 @@ class UserController{
             'password' => password_hash($password, PASSWORD_DEFAULT)
         ];
 
-        $this -> db -> query("INSERT INTO users(name, email, city, state, password) VALUES(:name, :email, :city, :state, :password)", $params);
-
         //Get the new user id
 
-        $userId = $this->db->conn->lastInsertId();
+        $userId = $this->userModel -> create($params);
 
         Session::set('user', [
             'id' => $userId,
@@ -180,7 +174,7 @@ class UserController{
             exit();
         }
 
-        $user = $this -> db -> query("SELECT * FROM users WHERE email=:email", $params=['email' => $email]);
+        $user = $this -> userModel -> getUserByEmail($email);
 
         if(empty($user)){
             $errors['email'] = 'Incorrect credentials';

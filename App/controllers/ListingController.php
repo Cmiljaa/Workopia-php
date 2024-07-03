@@ -6,14 +6,15 @@ use Framework\Autorization;
 use Framework\Database;
 use Framework\Session;
 use Framework\Validation;
+use App\Models;
+use App\Models\ListingModel;
 
 class ListingController{
-    protected $db;
+    protected $listingModel;
 
     public function __construct()
     {
-        $config = require basePath('config/db.php');
-        $this -> db = new Database($config);
+        $this -> listingModel = new ListingModel();
     }
 
     /**
@@ -23,7 +24,7 @@ class ListingController{
     */
 
     public function index(){
-        $listings = $this -> db -> query("SELECT * FROM listings ORDER BY created_at DESC");
+        $listings = $this -> listingModel -> index();
 
         loadView('listings/index', ['listings' => $listings]);
     }
@@ -36,15 +37,10 @@ class ListingController{
     */
 
     public function show($params){
+        
         $id = $params['id'] ?? '';
 
-        $params = [
-            'id' => $id
-        ];
-
-        $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
-
-        $listing = $listing[0];
+        $listing = $this -> listingModel -> getListingById($id);
 
         //Check if listing exists
 
@@ -53,7 +49,7 @@ class ListingController{
             return;
         }
 
-        loadView('listings/show', ['listing' => $listing]);
+        loadView('listings/show', ['listing' => $listing[0]]);
     }
 
     /**
@@ -75,13 +71,7 @@ class ListingController{
     public function edit($params){
         $id = $params['id'] ?? '';
 
-        $params = [
-            'id' => $id
-        ];
-
-        $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
-
-        $listing = $listing[0];
+        $listing = $this -> listingModel -> getListingById($id);
 
         //Check if listing exists
 
@@ -92,12 +82,12 @@ class ListingController{
 
         //Authorization
 
-        if(!Autorization::isOwner($listing['user_id'])){
+        if(!Autorization::isOwner($listing[0]['user_id'])){
             Session::setFlashMessage('error_message', 'You are not authorized to edit this listing');
             return redirect('/');
         }
 
-        loadView('listings/edit', ['listing' => $listing]);
+        loadView('listings/edit', ['listing' => $listing[0]]);
     }
 
     /**
@@ -129,27 +119,7 @@ class ListingController{
             loadView('listings/create', ['errors' => $errors, 'listing' => $newListingData]);
         }else{
 
-            $fields = [];
-
-            foreach($newListingData as $field => $value){
-                $fields[] = $field;
-            }
-
-            $fields = implode(',', $fields);
-
-            $values = [];
-
-            foreach($newListingData as $field => $value){
-                if($value === ''){
-                    $newListingData[$field] = null;
-                }
-
-                $values[] = ':' . $field;
-            }
-
-            $values = implode(',', $values);
-
-            $this -> db -> query("INSERT INTO listings({$fields}) VALUES ({$values})", $newListingData);
+            $this -> listingModel -> store($newListingData);
 
             Session::setFlashMessage('success_message', 'Successfully added listing!');
 
@@ -167,22 +137,16 @@ class ListingController{
     public function delete($params){
         $id = $params['id'] ?? '';
 
-        $params = [
-            'id' => $id
-        ];
-
-        $listing = $this -> db -> query('SELECT * FROM listings WHERE id = :id', $params);
-
-        $listing = $listing[0];
+        $listing = $this -> listingModel -> getListingById($id);
 
         //Authorization
 
-        if(!Autorization::isOwner($listing['user_id'])){
+        if(!Autorization::isOwner($listing[0]['user_id'])){
             Session::setFlashMessage('error_message', 'You are not authorized to delete this listing');
             return redirect('/');
         }
 
-        $result = $this -> db -> query('DELETE FROM listings WHERE id = :id', $params);
+        $result = $this -> listingModel -> deleteListingById($id);
 
         //Set flash message
 
@@ -203,11 +167,7 @@ class ListingController{
     {
         $id = $params['id'] ?? '';
 
-        $params = [
-        'id' => $id
-        ];
-
-        $listing = $this->db->query('SELECT * FROM listings WHERE id = :id', $params);
+        $listing = $this -> listingModel -> getListingById($id);
 
         // Check if listing exists
         if (!$listing) {
@@ -227,10 +187,10 @@ class ListingController{
 
         $errors = [];
 
-        foreach ($requiredFields as $field) {
-        if (empty($updateValues[$field]) || !Validation::string($updateValues[$field])) {
-            $errors[$field] = ucfirst($field) . ' is required';
-        }
+        foreach ($requiredFields as $field){
+            if (empty($updateValues[$field]) || !Validation::string($updateValues[$field])){
+                $errors[$field] = ucfirst($field) . ' is required';
+            }
         }
 
         if (!empty($errors)) {
@@ -240,19 +200,9 @@ class ListingController{
         ]);
         exit;
         } else {
+
         // Submit to database
-        $updateFields = [];
-
-        foreach (array_keys($updateValues) as $field) {
-            $updateFields[] = "{$field} = :{$field}";
-        }
-
-        $updateFields = implode(', ', $updateFields);
-
-        $updateQuery = "UPDATE listings SET $updateFields WHERE id = :id";
-
-        $updateValues['id'] = $id;
-        $this->db->query($updateQuery, $updateValues);
+        $this -> listingModel -> update($id, $updateValues);
 
         // Set flash message
         Session::setFlashMessage('success_message', 'Listing updated');
@@ -272,15 +222,9 @@ class ListingController{
         $keywords = isset($_GET['keywords']) ? trim($_GET['keywords']) : '';
         $location = isset($_GET['location']) ? trim($_GET['location']) : '';
 
-        $query = "SELECT * FROM listings WHERE (title LIKE :keywords OR description LIKE :keywords
-        OR tags LIKE :keywords OR company LIKE :keywords) AND (city LIKE :location OR state LIKE :location)";
+        $listings = $this -> listingModel -> search($keywords, $location);
 
-        $params = [
-            'keywords' => "%{$keywords}%",
-            'location' => "%{$location}%"
-        ];
-
-        $listings = $this->db->query($query, $params);
+        inspectAndDie($listings);
 
         loadView('listings/index', [
             'listings' => $listings,

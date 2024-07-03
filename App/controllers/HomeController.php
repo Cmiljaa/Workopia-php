@@ -1,21 +1,21 @@
 <?php
 
 namespace App\Controllers;
-
+use App\Models\HomeModel;
 use Framework\Database;
 
 
 class HomeController{
-    protected $db;
+    protected $homeModel;
+
     public function __construct()
     {
-        $config = require basePath('config/db.php');
-
-        $this -> db = new Database($config);
+        $this -> homeModel = new HomeModel();
     }
 
     public function index(){
-        $listings = $this -> db -> query("SELECT * FROM listings ORDER BY created_at DESC"); 
+
+        $listings = $this -> homeModel -> index();
 
         loadView('home', ['listings' => $listings]);
     }
